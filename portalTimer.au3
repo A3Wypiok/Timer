@@ -9,7 +9,6 @@
 #include <Timers.au3>
 
 Opt("TrayMenuMode", 3)
-;file
 
 Global $flag = 0, $hGUI, $filename = "GuiSettings.ini", $pathFileSettings = @WorkingDir & "\" & $filename
 Global $defaultTime = Int(IniRead($pathFileSettings, "Timer", "Time", 60000)), $defaultKey = IniRead($pathFileSettings, "HotKey", "Key", "ç")
