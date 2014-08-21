@@ -9,9 +9,10 @@
 #include <Timers.au3>
 
 Opt("TrayMenuMode", 3)
+;file
 
 Global $flag = 0, $hGUI, $filename = "GuiSettings.ini", $pathFileSettings = @WorkingDir & "\" & $filename
-Global $defaultTime = Int(IniRead($pathFileSettings, "Timer", "Time", 60000)), $defaultKey = IniRead($pathFileSettings, "HotKey", "Key", "ç")
+Global $defaultTime = Int(IniRead($pathFileSettings, "Timer", "Time", 60000)), $defaultKey = IniRead($pathFileSettings, "HotKey", "Key", "Ã§")
 Global $ms = Int(IniRead($pathFileSettings, "Timer", "Time", $defaultTime)), $msRem = $ms ;This is the time in milliseconds (default 1 min)
 Global $iTimer, $iTimerSec, $minutes, $secondes, $input
 Global Const $SC_DRAGMOVE = 0xF012
@@ -30,12 +31,12 @@ Local $idPassThrou = TrayCreateItem("Pass Through")
 TrayItemSetState($idPassThrou, $TRAY_CHECKED)
 TrayCreateItem("") ; Create a separator line.
 
-Local $idScriptState = TrayCreateItem("Désactiver")
+Local $idScriptState = TrayCreateItem("DÃ©sactiver")
 TrayCreateItem("") ; Create a separator line.
 
 Local $idExit = TrayCreateItem("Exit")
 
-TraySetState(3) ; Show the tray menu.çç
+TraySetState(3) ; Show the tray menu.Ã§Ã§
 TraySetToolTip("PortalTimer")
 TraySetIcon(@WorkingDir & "\" & "portal.ico") ; set icon
 
@@ -207,7 +208,7 @@ Func ScriptState()
 	If $isPause = 1 Then
 		HotKeySet($key, "timer")
 		$isPause = 0
-		TrayItemSetText($idScriptState, "Désactiver")
+		TrayItemSetText($idScriptState, "DÃ©sactiver")
 	Else
 		HotKeySet($key)
 
