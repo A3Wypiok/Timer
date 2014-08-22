@@ -10,38 +10,43 @@
 
 Opt("TrayMenuMode", 3)
 
-Global $flag = 0, $hGUI, $filename = "GuiSettings.ini", $pathFileSettings = @WorkingDir & "\" & $filename
+;Global var for GUI
+Global $hGUI, $input
+Global Const $SC_DRAGMOVE = 0xF012
+Global $filename = "GuiSettings.ini", $pathFileSettings = @WorkingDir & "\" & $filename
 
-Global $defaultKey = IniRead($pathFileSettings, "HotKey", "Key", "ç")
+;Global var for Key
+Global $key = LinkKey(IniRead($pathFileSettings, "HotKey", "Key", "ç"))
 
-Global $defaultTime = 60000
+;Global var for Time
+Global $defaultTime = Int(IniRead($pathFileSettings, "Timer", "Time", 60000))
 Global $ms ;This is the time in milliseconds
 
-Global $iTimer, $iTimerSec, $input
-Global Const $SC_DRAGMOVE = 0xF012
-Global $key = KeyToString()
-Global $isPause = 0
-Global $pass = 1
+;Global var for Timers
+Global $iTimer, $iTimerSec
+
+; Global var for TrayItems
+Global $isPause = 0, $pass = 1, $flag = 0
 
 OnAutoItExitRegister("OnAutoItExit")
-HotKeySet($key, "timer")
 
-Local $idHotKey = TrayCreateItem("Change HotKey")
-Local $idTimer = TrayCreateItem("Change Timer")
+Global $idHotKey = TrayCreateItem("Change HotKey")
+
+Global $idTimer = TrayCreateItem("Change Timer")
 TrayCreateItem("") ; Create a separator line.
 
-Local $idPassThrou = TrayCreateItem("Pass Through")
-TrayItemSetState($idPassThrou, $TRAY_CHECKED)
+Global $idPassThrough = TrayCreateItem("Pass Through")
+TrayItemSetState($idPassThrough, $TRAY_CHECKED)
 TrayCreateItem("") ; Create a separator line.
 
-Local $idScriptState = TrayCreateItem("Désactiver")
+Global $idScriptState = TrayCreateItem("Disable")
 TrayCreateItem("") ; Create a separator line.
 
-Local $idExit = TrayCreateItem("Exit")
+Global $idExit = TrayCreateItem("Exit")
 
 TraySetState(3) ; Show the tray menu.
-TraySetToolTip("PortalTimer")
-TraySetIcon(@WorkingDir & "\" & "portal.ico") ; set icon
+TraySetToolTip("Timer")
+TraySetIcon(@WorkingDir & "\" & "timer.ico") ; set icon
 
 While 1
    ; A loop
@@ -59,8 +64,8 @@ While 1
 		 ChangeHotKey()
 	  Case $idTimer
 		 ChangeTimer()
-	  Case $idPassThrou
-		 PassTrou()
+	  Case $idPassThrough
+		 PassThrough()
 	  Case $idScriptState
 		 ScriptState()
 	  Case $idExit ; Exit the loop.
@@ -95,12 +100,11 @@ Func startTimer()
 
 	$iTimer = _Timer_SetTimer($hGUI, $ms, "stopTimer")
 
-	$color = 0xe07300
+	Local $color = 0xe07300
 	GUISetBkColor($color)
 	_WinAPI_SetLayeredWindowAttributes($hGUI, $color, 255)
 
 	$input = GUICtrlCreateLabel("", 5, -2, 190, 50, BitOr($SS_CENTER, $ES_READONLY))
-
 	GUICtrlSetFont($input, 36, 800, Default, "Agency FB", 3)
 	GUICtrlSetColor ($input, 0xea730d) ;orange
 
@@ -112,14 +116,12 @@ Func startTimer()
 EndFunc
 
 Func stopTimer($hWnd, $iMsg, $iIDTimer, $iTime)
-	_Timer_KillTimer($hGUI, $iTimerSec)
-	_Timer_KillTimer($hGUI, $iTimer)
+   _Timer_KillTimer($hGUI, $iTimerSec)
+   _Timer_KillTimer($hGUI, $iTimer)
 
-	$flag = 0
-   If WinExists($hGUI) Then
-	  SavePosition()
-	  GUIDelete($hGUI)
-   EndIf
+   $flag = 0
+   SavePosition()
+   GUIDelete($hGUI)
 EndFunc
 
 func SavePosition()
@@ -147,17 +149,17 @@ Func UpdateTime()
 	GUICtrlSetData($input, $time)
 EndFunc
 
-Func KeyToString()
-	return "{" & $defaultKey & "}"
+Func LinkKey($k)
+   $newKey = '{' & $k & '}'
+   HotKeySet($newKey, "timer")
+   return $newKey
 EndFunc
 
 Func ChangeHotKey()
-   Local $cHotkey = InputBox("Change HotKey", "Change HotKey (only one key)", $defaultKey, " M1")
+   Local $cHotkey = InputBox("Change HotKey", "Change HotKey (only one key)", IniRead($pathFileSettings, "HotKey", "Key", "ç"), " M1")
    If $cHotkey <> "" and @error <> 1 Then
-	  HotKeySet($key)
-	  $defaultKey = $cHotkey
-	  $key = KeyToString()
-	  HotKeySet($key, "timer")
+	  HotKeySet($key) ;remove hotkey
+	  $key = LinkKey($cHotkey)
 	  IniWrite($pathFileSettings, "HotKey", "Key", $cHotkey)
    EndIf
 EndFunc
@@ -171,7 +173,7 @@ Func ChangeTimer()
 
    Local $cTimer = InputBox("Change Timer", "Change the countdown (mm:ss)", $str, " M5")
    If $cTimer <> "" and @error <> 1 Then ; si ce n'est pas cancel
-	  $aArray = StringRegExp($cTimer, '([0-9]{2}):([0-9]{2})', 1)
+	  Local $aArray = StringRegExp($cTimer, '([0-9]{2}):([0-9]{2})', 1)
 	  If @error = 0 Then ; si c'est une bonne expression (mm:ss)
 		 $minutes = $aArray[0]
 		 $secondes = $aArray[1]
@@ -183,13 +185,13 @@ Func ChangeTimer()
    EndIf
 EndFunc
 
-Func PassTrou()
+Func PassThrough()
 	If $pass = 1 Then
 		$pass = 0
-		TrayItemSetState($idPassThrou, $TRAY_UNCHECKED)
+		TrayItemSetState($idPassThrough, $TRAY_UNCHECKED)
 	Else
 		$pass = 1
-		TrayItemSetState($idPassThrou, $TRAY_CHECKED)
+		TrayItemSetState($idPassThrough, $TRAY_CHECKED)
 	EndIf
 EndFunc
 
@@ -197,11 +199,11 @@ Func ScriptState()
 	If $isPause = 1 Then
 		HotKeySet($key, "timer")
 		$isPause = 0
-		TrayItemSetText($idScriptState, "Désactiver")
+		TrayItemSetText($idScriptState, "Disable")
 	Else
 		HotKeySet($key)
 
-		TrayItemSetText($idScriptState, "Activer")
+		TrayItemSetText($idScriptState, "Activate")
 		$isPause = 1
 	EndIf
 EndFunc
