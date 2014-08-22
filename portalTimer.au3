@@ -39,7 +39,7 @@ TrayCreateItem("") ; Create a separator line.
 
 Local $idExit = TrayCreateItem("Exit")
 
-TraySetState(3) ; Show the tray menu.çç
+TraySetState(3) ; Show the tray menu.
 TraySetToolTip("PortalTimer")
 TraySetIcon(@WorkingDir & "\" & "portal.ico") ; set icon
 
