@@ -11,9 +11,13 @@
 Opt("TrayMenuMode", 3)
 
 Global $flag = 0, $hGUI, $filename = "GuiSettings.ini", $pathFileSettings = @WorkingDir & "\" & $filename
-Global $defaultTime = Int(IniRead($pathFileSettings, "Timer", "Time", 60000)), $defaultKey = IniRead($pathFileSettings, "HotKey", "Key", "Ã§")
-Global $ms = Int(IniRead($pathFileSettings, "Timer", "Time", $defaultTime)), $msRem = $ms ;This is the time in milliseconds (default 1 min)
-Global $iTimer, $iTimerSec, $minutes, $secondes, $input
+
+Global $defaultKey = IniRead($pathFileSettings, "HotKey", "Key", "ç")
+
+Global $defaultTime = 60000
+Global $ms ;This is the time in milliseconds
+
+Global $iTimer, $iTimerSec, $input
 Global Const $SC_DRAGMOVE = 0xF012
 Global $key = KeyToString()
 Global $isPause = 0
@@ -30,7 +34,7 @@ Local $idPassThrou = TrayCreateItem("Pass Through")
 TrayItemSetState($idPassThrou, $TRAY_CHECKED)
 TrayCreateItem("") ; Create a separator line.
 
-Local $idScriptState = TrayCreateItem("DÃ©sactiver")
+Local $idScriptState = TrayCreateItem("Désactiver")
 TrayCreateItem("") ; Create a separator line.
 
 Local $idExit = TrayCreateItem("Exit")
@@ -67,15 +71,13 @@ Exit
 
 ;----------------------------------
 Func timer()
-	if $flag == 0 Then
-		startTimer()
-	Else
-		stopTimer(-1, -1, -1, -1)
-	EndIf
+   if $flag == 0 Then
+	  startTimer()
+   Else
+	  stopTimer(-1, -1, -1, -1)
+   EndIf
+
 	HotKeySet($key)
-;~ 	If WinActive("Guild Wars 2") <> 0 Then
-;~ 		Send($key)
-;~ 	EndIf
 	If $pass = 1 Then
 		Send($key)
 	EndIf
@@ -83,41 +85,34 @@ Func timer()
 EndFunc
 
 Func startTimer()
-   $msRem = $defaultTime
-   ;AdlibRegister("stopTimer", $defaultTime)
+   $ms = Int(IniRead($pathFileSettings, "Timer", "Time", $defaultTime))
+   $defaultTime = $ms
 
 	$flag = 1
-;~ 	$hGUI= GuiCreate("PortalTimer",200, 50, IniRead($pathFileSettings, "Position", "X-Pos", 0),IniRead($pathFileSettings, "Position", "Y-Pos", 0), BitOr($WS_POPUP, $WS_DLGFRAME), BitOr($WS_EX_TOOLWINDOW, $WS_EX_TOPMOST))
+
 	$hGUI= GuiCreate("PortalTimer",200, 50, IniRead($pathFileSettings, "Position", "X-Pos", 0),IniRead($pathFileSettings, "Position", "Y-Pos", 0), $WS_POPUP, BitOr($WS_EX_TOOLWINDOW, $WS_EX_TOPMOST, $WS_EX_LAYERED))
 	GUISetIcon("portal.ico")
-	$iTimer = _Timer_SetTimer($hGUI, $defaultTime, "stopTimer")
-	;GUISetState(@SW_DISABLE, $hGUI)
-	;WinSetTrans($hGUI, "", 50) ;set opacity
+
+	$iTimer = _Timer_SetTimer($hGUI, $ms, "stopTimer")
+
 	$color = 0xe07300
-	;GUISetBkColor(0xABCDEF)
 	GUISetBkColor($color)
-	;_WinAPI_SetLayeredWindowAttributes($hGUI, 0xABCDEF, 255)
 	_WinAPI_SetLayeredWindowAttributes($hGUI, $color, 255)
 
-	;GUISetBkColor(0x1c192c);;; lightblue
-	;GUICtrlSetBkColor($input, $GUI_BKCOLOR_TRANSPARENT)
-
 	$input = GUICtrlCreateLabel("", 5, -2, 190, 50, BitOr($SS_CENTER, $ES_READONLY))
-	;AdlibRegister("_MinusOne", 1000)
-	$iTimerSec = _Timer_SetTimer($hGUI, 1000, "_MinusOne")
-	UpdateTime()
 
-	;GUICtrlSetFont(-1, 36, 800)
 	GUICtrlSetFont($input, 36, 800, Default, "Agency FB", 3)
 	GUICtrlSetColor ($input, 0xea730d) ;orange
-	;GUISetBkColor(0xea730d, $input)
+
+	$iTimerSec = _Timer_SetTimer($hGUI, 1000, "_MinusOne")
+
+	UpdateTime()
+
 	GuiSetState(@SW_SHOWNOACTIVATE, $hGUI)
 EndFunc
 
 Func stopTimer($hWnd, $iMsg, $iIDTimer, $iTime)
-	;AdlibUnRegister("_MinusOne")
 	_Timer_KillTimer($hGUI, $iTimerSec)
-	;AdlibUnRegister("stopTimer")
 	_Timer_KillTimer($hGUI, $iTimer)
 
 	$flag = 0
@@ -141,13 +136,13 @@ func OnAutoItExit()
 EndFunc
 
 func _MinusOne($hWnd, $iMsg, $iIDTimer, $iTime)
-	$msRem = $msRem - 1000
+	$ms = $ms - 1000
 	UpdateTime()
 EndFunc
 
 Func UpdateTime()
-	Local $minutes = Int($msRem / 60000)
-	Local $secondes = Int(Mod($msRem, 60000)/1000)
+	Local $minutes = Int($ms / 60000)
+	Local $secondes = Int(Mod($ms, 60000)/1000)
 	Local $time = StringFormat("%02d", $minutes) & ":" & StringFormat("%02d", $secondes)
 	GUICtrlSetData($input, $time)
 EndFunc
@@ -162,15 +157,14 @@ Func ChangeHotKey()
 	  HotKeySet($key)
 	  $defaultKey = $cHotkey
 	  $key = KeyToString()
-	  HotKeySet(KeyToString(), "timer")
+	  HotKeySet($key, "timer")
 	  IniWrite($pathFileSettings, "HotKey", "Key", $cHotkey)
    EndIf
 EndFunc
 
 Func ChangeTimer()
-   $defaultTime = Int(IniRead($pathFileSettings, "Timer", "Time", $defaultTime))
-   ;AdlibUnRegister("stopTimer")
    _Timer_KillTimer($hGUI, $iTimer)
+
    Local $minutes = Int($defaultTime / 60000)
    Local $secondes = Int(Mod($defaultTime, 60000)/1000)
    Local $str = StringFormat("%02d", $minutes) & ":" & StringFormat("%02d", $secondes)
@@ -183,12 +177,8 @@ Func ChangeTimer()
 		 $secondes = $aArray[1]
 		 Local $toIniFile = ($minutes*60 + $secondes)*1000 ; convertion en ms
 		 IniWrite($pathFileSettings, "Timer", "Time", $toIniFile)
-		 ;AdlibRegister("stopTimer", $toIniFile)
 		 $iTimer = _Timer_SetTimer($hGUI, $toIniFile, "stopTimer")
-		 ;$msRem = $toIniFile
 		 $defaultTime = $toIniFile
-	  Else
-		 $msRem = $defaultTime
 	  EndIf
    EndIf
 EndFunc
@@ -207,13 +197,9 @@ Func ScriptState()
 	If $isPause = 1 Then
 		HotKeySet($key, "timer")
 		$isPause = 0
-		TrayItemSetText($idScriptState, "DÃ©sactiver")
+		TrayItemSetText($idScriptState, "Désactiver")
 	Else
 		HotKeySet($key)
-
-;~ 		If WinExists($hGUI) Then
-;~ 			stopTimer()
-;~ 		EndIf
 
 		TrayItemSetText($idScriptState, "Activer")
 		$isPause = 1
